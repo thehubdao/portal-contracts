@@ -94,22 +94,12 @@ const getAllCombinations = async () => {
 /* getAllCombinations() */
 
 const transferOwnership = async () => {
-  const avatarContract = new Contract('0x754a5d007d5f1188ef0db892ee115a7c01b38fa3', AvatarContractABI, signer)
-  console.log(signer)
+  const avatarContract = new Contract('0x4FB99a7ab547582646B9069eAB46F91dBAf31091', AvatarContractABI, signer)
   const transferOwnershipTx = await avatarContract.transferOwnership('0xfa39a2207f1d1c1cec32502000481f0fef660384')
   transferOwnershipTx.wait()
 }
 
 /* transferOwnership() */
-
-const transferDropOwnership = async () => {
-  const avatarContract = new Contract('0xeC2c84fa653bdB61aac4b87580a96C0A29a80a00', AvatarContractABI, signer)
-  console.log(signer)
-  const transferOwnershipTx = await avatarContract.transferOwnership('0xfa39a2207f1d1c1cec32502000481f0fef660384')
-  transferOwnershipTx.wait()
-}
-
-/* transferDropOwnership() */
 
 const addOwner = async () => {
   const creatorDataValue = avatarERC725Contract.encodeData([

@@ -66,7 +66,7 @@ const PRIVATE_KEY = process.env.UP_PK;
 const EOA = new ethers.Wallet(PRIVATE_KEY).connect(provider);
 
 const setContractMetadata = async () => {
-    const targetContractAddress = '0xf05C6747b2C6C8ae984651f54A109a11196FfC43';
+    const targetContractAddress = '0x4FB99a7ab547582646B9069eAB46F91dBAf31091';
     const targetContract = new ethers.Contract(
         targetContractAddress,
         UniversalProfile.abi,
@@ -80,8 +80,8 @@ const setContractMetadata = async () => {
         {
             keyName: 'LSP4Metadata',
             value: {
-                json: { "LSP4Metadata": { "name": "Platties Tee", "description": "Second wearable drop from THE HUB DAO featuring Platties. The wearable will be airdropped to all unmasked Plats. This LSP7 token can only be used once. If you equip it to your Citizen or Creator, this token will be burnt. Choose wisely!", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://QmVPpzRFyA8EBCm2xY8DEsN58gdr9y7miFFWSiqn6MNXQm" }]], "assets": [{ "url": "ipfs://QmccLuakYZtqTGvuxsH9NE9k2fLwgD3ZNuk2k2yLCv4PgH", "fileType": "video/mp4" }], "attributes": [{ "value": "Tier", "type": "string", "key": "Mythical" }] } },
-                url: 'ipfs://QmX82CqyL54VHFiP8jcYUWC3YHpsCHHDbqPFnMjwBaywwG',
+                json: { "LSP4Metadata": { "name": "Metaheads Hat", "description": "Third  wearable drop from THE HUB DAO featuring Metaheads. This LSP7 token can only be used once and it can only be equipped to your Citizens. If you equip it to any of your Citizens, this token will be burnt. Choose wisely!", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://QmaT1JMTAcid7d6PsY3eNXQnLpahw21Qv2Vir48HbzkTAc" }]], "attributes": [{ "value": "Tier", "type": "string", "key": "Mythical" }]} },
+                url: 'ipfs://QmesSjNQ7FwZptgafWsJN8biSpiXDhPGnVYURmhjFPXZsT',
             },
         },
     ])
@@ -93,7 +93,7 @@ const setContractMetadata = async () => {
     )
     tx.wait()
 }
-/* setContractMetadata() */
+setContractMetadata()
 
 const setDataForTokenId = async () => {
     const targetContractAddress = '0x754a5D007d5F1188Ef0db892ee115a7c01b38fA3';
@@ -392,4 +392,4 @@ const mintDrop = async () => {
     }
 }
 
-mintDrop()
+/* mintDrop() */
