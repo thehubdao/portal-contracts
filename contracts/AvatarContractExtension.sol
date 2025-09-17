@@ -240,16 +240,16 @@ contract AvatarContractExtension is LSP17Extension, ERC725Y {
             uint256 claimPrice = AvatarWearable(
                 payable(wearablesToEquip[i].wearableContract)
             ).claimPrice();
-            
+
             uint256 newTokenId = AvatarWearable(
                 payable(wearablesToEquip[i].wearableContract)
             ).claimWearable{value: claimPrice}(
-                claimSignatures[i], 
+                claimSignatures[i],
                 _extendableMsgSender()
             );
-            
+
             require(
-                newTokenId == predictedWearableTokenIds[i],
+                newTokenId == predictedWearableTokenIds[i], //We predict and check the token id to avoid any inconsistency between minted tokenId and equipping. EG:If two users claim and equip at the same time.
                 "Predicted token ID mismatch"
             );
         }
