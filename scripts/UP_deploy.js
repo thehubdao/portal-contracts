@@ -1,4 +1,5 @@
 const UniversalProfile = require('@lukso/lsp-smart-contracts/artifacts/UniversalProfile.json');
+const LSP6KeyManager = require('@lukso/lsp-smart-contracts/artifacts/LSP6KeyManager.json');
 const avatarContractFactoryJson = require('../artifacts/contracts/LuksoCitizens.sol/LuksoCitizens.json')
 const ethers = require('ethers')
 const { config } = require("dotenv");
@@ -6,7 +7,7 @@ const { ERC725 } = require('@erc725/erc725.js')
 const AvatarContractABI = require('../abi/AvatarContractABI.json')
 const LSP8ABI = require('../abi/LSP8MintableABI.json')
 const DropContractABI = require('../abi/DropContractABI.json')
-
+const LSP17_EXTENSION_PREFIX = '0xcee78b4094da86011096';
 //NOTE: This file contains some helpful functions to make interactions with contracts from the owner UP
 //TODO: Finish organazing repeated strings
 
@@ -59,11 +60,106 @@ const universalProfile = new ethers.Contract(
     provider,
 );
 
+// Crear instancia del KeyManager
+const keyManagerAddress = '0x8eD4919ca3156E794565061B5838553f9ecd5392';
+const keyManager = new ethers.Contract(
+    keyManagerAddress,
+    LSP6KeyManager.abi,
+    provider,
+);
 
 const OPERATION_CALL = 0;
+const OPERATION_CREATE = 1;
 
 const PRIVATE_KEY = process.env.UP_PK;
 const EOA = new ethers.Wallet(PRIVATE_KEY).connect(provider);
+
+async function main() {
+    const newExtensionAddress = await deployAndSetupNewExtension();
+    console.log('🔥 Extensión desplegada y configurada:', newExtensionAddress);
+}
+
+main()
+
+async function deployAndSetupNewExtension() {
+    console.log('🚀 Desplegando nueva extensión simplificada...');
+
+    // Verificar balance del UP
+    const upBalance = await provider.getBalance(universalProfileAddress);
+    console.log('📊 Balance del UP:', ethers.formatEther(upBalance), 'LYX');
+
+    if (parseFloat(ethers.formatEther(upBalance)) < 0.01) {
+        console.log('⚠️  ADVERTENCIA: Balance del UP muy bajo para despliegue');
+        return;
+    }
+
+    // Crear el bytecode del contrato con el constructor
+    const extensionArtifact = require('../artifacts/contracts/AvatarContractExtension.sol/AvatarContractExtension.json');
+    const deployTransaction = {
+        data: extensionArtifact.bytecode +
+            ethers.AbiCoder.defaultAbiCoder().encode(['address'], [universalProfileAddress]).slice(2)
+    };
+
+    console.log('📝 Desplegando contrato...');
+
+    const tx = await universalProfile.connect(EOA).execute(
+        OPERATION_CREATE, // Corregido: usar CREATE para desplegar contrato
+        ethers.ZeroAddress,
+        0,
+        deployTransaction.data
+    );
+
+    const receipt = await tx.wait();
+    console.log('✅ Transacción confirmada:', receipt.hash);
+
+    // Calcular la dirección del contrato desplegado
+    const contractAddress = ethers.getCreateAddress({
+        from: universalProfileAddress,
+        nonce: await provider.getTransactionCount(universalProfileAddress) - 1
+    });
+
+    console.log('🎯 Nueva extensión desplegada en:', contractAddress);
+
+    // Configurar la extensión para ambos contratos
+    const targetContracts = [
+        '0x74654920356257981f6b63a65ad72d4d9bc21929',
+        '0x754a5D007d5F1188Ef0db892ee115a7c01b38fA3'
+    ];
+
+    for (const targetContract of targetContracts) {
+        console.log(`🔗 Configurando para contrato: ${targetContract}`);
+
+        // 1. Registrar LSP17 extension
+
+        await addExtensionFunctionToAvatarContract(
+            contractAddress,
+            targetContract,
+            'getClaimPrice((address,uint256)[])'
+        );
+
+        await addExtensionFunctionToAvatarContract(
+            contractAddress,
+            targetContract,
+            'claimAndSetNewWearings(uint256,bytes[],uint256[],(address,uint256)[],(address,uint256)[],bytes)'
+        );
+
+        await addExtensionFunctionToAvatarContract(
+            contractAddress,
+            targetContract,
+            'setAvatarNewWearings(uint256,(address,uint256)[],(address,uint256)[],bytes)'
+        );
+
+        // 2. Otorgar permisos LSP6
+        await grantExtensionCallPermission(contractAddress, targetContract);
+
+        console.log(`✅ Configuración completada para: ${targetContract}`);
+    }
+
+    console.log('🎉 Nueva extensión lista para testing!');
+    console.log('📍 Dirección de la nueva extensión:', contractAddress);
+
+    return contractAddress;
+}
 
 const setContractMetadata = async () => {
     const targetContractAddress = '0x4FB99a7ab547582646B9069eAB46F91dBAf31091';
@@ -80,7 +176,7 @@ const setContractMetadata = async () => {
         {
             keyName: 'LSP4Metadata',
             value: {
-                json: { "LSP4Metadata": { "name": "Metaheads Hat", "description": "Third  wearable drop from THE HUB DAO featuring Metaheads. This LSP7 token can only be used once and it can only be equipped to your Citizens. If you equip it to any of your Citizens, this token will be burnt. Choose wisely!", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://QmaT1JMTAcid7d6PsY3eNXQnLpahw21Qv2Vir48HbzkTAc" }]], "attributes": [{ "value": "Tier", "type": "string", "key": "Mythical" }]} },
+                json: { "LSP4Metadata": { "name": "Metaheads Hat", "description": "Third  wearable drop from THE HUB DAO featuring Metaheads. This LSP7 token can only be used once and it can only be equipped to your Citizens. If you equip it to any of your Citizens, this token will be burnt. Choose wisely!", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://QmaT1JMTAcid7d6PsY3eNXQnLpahw21Qv2Vir48HbzkTAc" }]], "attributes": [{ "value": "Tier", "type": "string", "key": "Mythical" }] } },
                 url: 'ipfs://QmesSjNQ7FwZptgafWsJN8biSpiXDhPGnVYURmhjFPXZsT',
             },
         },
@@ -93,7 +189,6 @@ const setContractMetadata = async () => {
     )
     tx.wait()
 }
-setContractMetadata()
 
 const setDataForTokenId = async () => {
     const targetContractAddress = '0x754a5D007d5F1188Ef0db892ee115a7c01b38fA3';
@@ -113,8 +208,6 @@ const setDataForTokenId = async () => {
     console.log(setDataForTokenIdTx)
 }
 
-/* setDataForTokenId() */
-
 const transferOwnership = async () => {
     const targetContractAddress = '0x754a5D007d5F1188Ef0db892ee115a7c01b38fA3';
     const targetContract = new ethers.Contract(
@@ -130,7 +223,6 @@ const transferOwnership = async () => {
     await transferOwnershipTx.wait()
     console.log(transferOwnershipTx)
 }
-/* transferOwnership() */
 
 const setTokenName = async () => {
     const targetContractAddress = '0x323b3f7aff4e60a13593401521b96197f3c59369';
@@ -160,8 +252,6 @@ const setTokenName = async () => {
     tx.wait()
 }
 
-/* setTokenName() */
-
 const mintTeamTokens = async () => {
     const targetContractAddress = '0x323b3f7aff4e60a13593401521b96197f3c59369';
     const avatarContract = new ethers.Contract(
@@ -190,8 +280,6 @@ const mintTeamTokens = async () => {
 
     }
 }
-
-/* mintTeamTokens() */
 
 const contractMigration = async () => {
     const originContractAddress = '0x323b3f7aff4e60a13593401521b96197f3c59369'
@@ -233,8 +321,6 @@ const contractMigration = async () => {
     }
 }
 
-/* contractMigration()
- */
 const airDrop = async () => {
     const airdropList = ["0x46449e7d22fb09e3cb295b996ba3a8c96ff27075", "0x46449e7d22fb09e3cb295b996ba3a8c96ff27075"]
     const targetContractAddress = '0x74654920356257981f6b63a65ad72d4d9bc21929';
@@ -263,8 +349,6 @@ const airDrop = async () => {
     }
 }
 
-/* airDrop()  */
-
 const withdraw = async () => {
     const targetContractAddress = '0x323b3f7aff4e60a13593401521b96197f3c59369';
     const avatarContract = new ethers.Contract(
@@ -282,7 +366,6 @@ const withdraw = async () => {
     tx.wait()
 
 }
-/* withdraw() */
 
 const sendTo = async () => {
     const targetContractAddress = '0x74654920356257981f6b63a65ad72d4d9bc21929';
@@ -310,8 +393,6 @@ const sendTo = async () => {
     }
 }
 
-/* sendTo()
- */
 const setBaseURI = async () => {
     const targetContractAddress = '0x74654920356257981f6b63a65ad72d4d9bc21929';
     const targetContract = new ethers.Contract(
@@ -348,8 +429,6 @@ function concatBaseURI(baseURI) {
     return '0x' + resultBuffer.toString('hex');
 }
 
-/* setBaseURI() */
-
 const burnTokens = async () => {
     const targetContractAddress = '0x3D6894787Ea0228237b408Ec04d1d1C39554Cb61';
     const avatarContract = new ethers.Contract(
@@ -365,8 +444,6 @@ const burnTokens = async () => {
         burnEncodedFunction
     )
 }
-
-/* burnTokens() */
 
 const mintDrop = async () => {
     const targetContractAddress = '0xf05c6747b2c6c8ae984651f54a109a11196ffc43';
@@ -392,4 +469,45 @@ const mintDrop = async () => {
     }
 }
 
-/* mintDrop() */
+async function addExtensionFunctionToAvatarContract(extensionAddress, targetContractAddress, functionSelector) {
+    const functionSelectorBytes = ethers.keccak256(ethers.toUtf8Bytes(functionSelector)).substring(0, 10);
+    console.log("Function Selector", functionSelectorBytes)
+    const avatarContract = new ethers.Contract(
+        targetContractAddress,
+        avatarContractFactoryJson.abi,
+        provider,
+    );
+
+    const mappingKey = ethers.zeroPadBytes(LSP17_EXTENSION_PREFIX + '0000' + functionSelectorBytes.slice(2), 32);
+
+    console.log("Mapping Key", mappingKey)
+
+    const addressBytes = ethers.zeroPadBytes(extensionAddress, 20)
+
+    const setDataEncodedFunction = avatarContract.interface.encodeFunctionData('setData', [mappingKey, addressBytes])
+    console.log(EOA.address, "EOA Address")
+    const tx = await universalProfile.connect(EOA).execute(OPERATION_CALL,
+        targetContractAddress,
+        0,
+        setDataEncodedFunction
+    )
+    await tx.wait()
+}
+
+async function grantExtensionCallPermission(extensionAddress, targetContractAddress) {
+    const allowedCallsKey = '0x4b80742de2bf82acb3630000' + extensionAddress.toLowerCase().slice(2);
+
+    const allowedCallsValue = '0x' +
+        '00000010' + // CALL permission (0x00000010)
+        targetContractAddress.toLowerCase().slice(2) + // target contract (20 bytes)
+        'ffffffff' + // any function selector (4 bytes) 
+        '00000000'; // padding (4 bytes)
+
+    const setDataCall = universalProfile.interface.encodeFunctionData('setData', [
+        allowedCallsKey,
+        allowedCallsValue
+    ]);
+
+    const tx = await keyManager.connect(EOA).execute(setDataCall);
+    await tx.wait();
+}

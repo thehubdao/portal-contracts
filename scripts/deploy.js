@@ -2,7 +2,8 @@ const { config } = require("dotenv");
 const { Contract } = require("ethers");
 const { ERC725 } = require('@erc725/erc725.js')
 const AvatarContractABI = require('../abi/AvatarContractABI.json')
-const DropContractABI = require('../abi/DropContractABI.json')
+const AvatarWearableABI = require('../abi/AvatarWearableABI.json');
+const { ethers } = require("hardhat");
 
 config()
 
@@ -50,18 +51,23 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const { gasPrice } =
     await ethers.provider.getFeeData()
-  await deployDrop(deployer, gasPrice)
+  /* await deployDrop(deployer, gasPrice) */
+  /* await deployAvatarAccess(deployer, gasPrice) */
+/*   await addAvatarContractToAvatarAccess(deployer, '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', '0x13E57c785807E4673DE7D9eC289b1b790F5a2Af6', gasPrice) */
+  /* await deployLuksoCitizensExtension(deployer, gasPrice)
+ */
+  await mintDrop(deployer, gasPrice, '0x159D5804Da44cCA7782C5394944bec3c03a63F52', '0xD803011177474766A066244076daDDd9dDeDA2c6')
   /* await deployCitizensProxy(deployer, gasPrice) */
 
 }
 
 async function deployDrop(deployer, gasPrice) {
-  const contractFactory = await ethers.getContractFactory('Drop', DropContractABI, deployer)
-  const proxy = await contractFactory.deploy({ gasPrice })
+  const contractFactory = await ethers.getContractFactory('AvatarWearable', AvatarWearableABI, deployer)
+  const proxy = await contractFactory.deploy('Test Balaclava', 'TBLC', '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', 0, { gasPrice })
   const contractAddress = await proxy.getAddress()
-  const dropContract = new Contract(contractAddress, DropContractABI, deployer)
+  const dropContract = new Contract(contractAddress, AvatarWearableABI, deployer)
   await dropContract.transferOwnership(process.env.UP_ADDRESS)
-  
+
   console.log("Drop address:" + contractAddress)
 }
 
@@ -70,6 +76,15 @@ async function deployCitizensProxy(deployer, gasPrice) {
   const proxy = await contractFactory.deploy(process.env.EOA_ADDRESS, { gasPrice })
   const contractAddress = await proxy.getAddress()
   console.log("Proxy contract address:" + contractAddress)
+}
+
+async function mintDrop(deployer, gasPrice, dropAddress, toAddress) {
+  const contract = new Contract(dropAddress, AvatarWearableABI, deployer)
+  const tx = await contract.mint(toAddress, { gasPrice })
+  console.log(tx)
+  const wait = await tx.wait()
+  console.log(wait)
+  console.log("Minted drop to:", toAddress)
 }
 
 async function deployLuksoCitizens(deployer, gasPrice) {
@@ -110,6 +125,33 @@ async function deployLuksoCitizens(deployer, gasPrice) {
 
   console.log(creatorDataValue, decodedData)
   console.log("Avatar Contract address:", await avatarContract.getAddress());
+}
+
+async function deployAvatarAccess(deployer, gasPrice) {
+  const contractFactory = await ethers.getContractFactory('AvatarAccess', deployer)
+  const address = await deployer.getAddress()
+  const contract = await contractFactory.deploy(address, { gasPrice })
+  const contractAddress = await contract.getAddress()
+  console.log("Avatar Access address:", contractAddress);
+}
+
+async function addAvatarContractToAvatarAccess(deployer, avatarAccessAddress, avatarContractAddress, gasPrice) {
+  const avatarAccessContract = new Contract(avatarAccessAddress, ['function addAvatarContract(address avatarContract)'], deployer)
+  const tx = await avatarAccessContract.addAvatarContract(avatarContractAddress, { gasPrice })
+  await tx.wait()
+}
+
+async function removeAvatarContractToAvatarAccess(deployer, avatarAccessAddress, avatarContractAddress, gasPrice) {
+  const avatarAccessContract = new Contract(avatarAccessAddress, ['function removeAvatarContract(address avatarContract)'], deployer)
+  const tx = await avatarAccessContract.removeAvatarContract(avatarContractAddress, { gasPrice })
+  await tx.wait()
+}
+
+async function deployLuksoCitizensExtension(deployer, gasPrice) {
+  const contractFactory = await ethers.getContractFactory('AvatarContractExtension', deployer)
+  const token = await contractFactory.deploy(deployer, { gasPrice })
+  const contractAddress = await token.getAddress()
+  console.log("Lukso Citizens Extension address:", contractAddress);
 }
 
 main()

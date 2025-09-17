@@ -9,7 +9,20 @@ const PK = process.env.EOA_PK
 const PK_DEV = process.env.EOA_PK_TESTNET
 
 module.exports = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
+  paths: {
+    sources: "./contracts",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
   networks: {
     luksoT:{
       live: true,
@@ -17,7 +30,7 @@ module.exports = {
       chainId: 4201,
       accounts: [PK_DEV]
     },
-    lukso: {
+    luksoM: {
       live: true,
       url: "https://rpc.mainnet.lukso.network",
       chainId: 42,

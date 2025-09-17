@@ -1,0 +1,14 @@
+{
+  "solidity.compileUsingRemoteVersion": "v0.8.20",
+  "solidity.defaultCompiler": "remote",
+  "solidity.packageDefaultDependenciesContractsDirectory": "contracts",
+  "solidity.packageDefaultDependenciesDirectory": "node_modules",
+  "solidity.remappings": [
+    "@lukso/lsp-smart-contracts/=node_modules/@lukso/lsp-smart-contracts/",
+    "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
+    "@erc725/smart-contracts/=node_modules/@erc725/smart-contracts/"
+  ],
+  "solidity.monoRepoSupport": false,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "javascript.preferences.includePackageJsonAutoImports": "on"
+}
