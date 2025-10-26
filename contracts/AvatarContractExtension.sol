@@ -226,7 +226,7 @@ contract AvatarContractExtension is LSP17Extension, ERC725Y {
         Linkedwearable[] memory wearablesToEquip,
         bytes memory lsp4MetadataValue
     ) public payable onlyTokenOwner(avatarTokenId) {
-        // Verificar que tenemos suficiente ETH para todos los claims
+    //Check enough Payment to claim every nft
         uint256 totalClaimPrice = 0;
         for (uint256 i = 0; i < wearablesToEquip.length; i++) {
             totalClaimPrice += AvatarWearable(
@@ -235,7 +235,7 @@ contract AvatarContractExtension is LSP17Extension, ERC725Y {
         }
         require(msg.value >= totalClaimPrice, "Insufficient ETH for claims");
 
-        // Claim cada wearable y verificar tokenId predicho
+        //Claim each wearable and verify predicted tokenId
         for (uint256 i = 0; i < wearablesToEquip.length; i++) {
             uint256 claimPrice = AvatarWearable(
                 payable(wearablesToEquip[i].wearableContract)
@@ -254,7 +254,7 @@ contract AvatarContractExtension is LSP17Extension, ERC725Y {
             );
         }
 
-        // Ahora equipar todo
+        //Equip all
         setAvatarNewWearings(
             avatarTokenId,
             wearablesToUnequip,

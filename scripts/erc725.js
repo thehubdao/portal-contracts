@@ -16,11 +16,11 @@ config()
 
 const schemas = [
   {
-    name: 'LSP8MetadataTokenURI:bytes',
-    key: '0x1339e76a390b7b9ec9010000b963e9b45d014edd60cff22ec9ad383335bbc3f8',
-    keyType: 'Mapping',
-    valueType: 'bytes',
-    valueContent: '0xabe425d6',
+    "name": 'LSP8MetadataTokenURI:bytes',
+    "key": '0x1339e76a390b7b9ec9010000b963e9b45d014edd60cff22ec9ad383335bbc3f8',
+    "keyType": 'Mapping',
+    "valueType": 'bytes',
+    "valueContent": '0xabe425d6',
   },
   {
     "name": "LSP4Metadata",

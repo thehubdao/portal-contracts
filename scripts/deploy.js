@@ -51,19 +51,20 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const { gasPrice } =
     await ethers.provider.getFeeData()
-  /* await deployDrop(deployer, gasPrice) */
+/*   await deployDrop(deployer, gasPrice, 'Test W1', 'W1', '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', 0) */
+  /* await deployDrop(deployer, gasPrice, 'Pink Balaclava Wearable', 'PBW', '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', 0); */
   /* await deployAvatarAccess(deployer, gasPrice) */
-/*   await addAvatarContractToAvatarAccess(deployer, '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', '0x13E57c785807E4673DE7D9eC289b1b790F5a2Af6', gasPrice) */
+  /*   await addAvatarContractToAvatarAccess(deployer, '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', '0x13E57c785807E4673DE7D9eC289b1b790F5a2Af6', gasPrice) */
   /* await deployLuksoCitizensExtension(deployer, gasPrice)
  */
-  await mintDrop(deployer, gasPrice, '0x159D5804Da44cCA7782C5394944bec3c03a63F52', '0xD803011177474766A066244076daDDd9dDeDA2c6')
+  /* await mintDrop(deployer, gasPrice, '0x159D5804Da44cCA7782C5394944bec3c03a63F52', '0xD803011177474766A066244076daDDd9dDeDA2c6') */
   /* await deployCitizensProxy(deployer, gasPrice) */
 
 }
 
-async function deployDrop(deployer, gasPrice) {
-  const contractFactory = await ethers.getContractFactory('AvatarWearable', AvatarWearableABI, deployer)
-  const proxy = await contractFactory.deploy('Test Balaclava', 'TBLC', '0x18bD2D5E73520995E50DB82EA3B2E8b9C88256cc', 0, { gasPrice })
+async function deployDrop(deployer, gasPrice, name, symbol, accessContract, price) {
+  const contractFactory = await ethers.getContractFactory('AvatarWearable', AvatarWearableABI, deployer,)
+  const proxy = await contractFactory.deploy(name, symbol, accessContract, price, { gasPrice })
   const contractAddress = await proxy.getAddress()
   const dropContract = new Contract(contractAddress, AvatarWearableABI, deployer)
   await dropContract.transferOwnership(process.env.UP_ADDRESS)

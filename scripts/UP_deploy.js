@@ -19,11 +19,11 @@ const _config = {
 
 const schemas = [
     {
-        name: 'LSP8MetadataTokenURI:bytes',
-        key: '0x1339e76a390b7b9ec9010000b963e9b45d014edd60cff22ec9ad383335bbc3f8',
-        keyType: 'Mapping',
-        valueType: 'bytes',
-        valueContent: '0xabe425d6',
+        "name": 'LSP8MetadataTokenURI:bytes',
+        "key": '0x1339e76a390b7b9ec9010000b963e9b45d014edd60cff22ec9ad383335bbc3f8',
+        "keyType": 'Mapping',
+        "valueType": 'bytes',
+        "valueContent": '0xabe425d6',
     },
     {
         "name": "LSP4Metadata",
@@ -73,13 +73,6 @@ const OPERATION_CREATE = 1;
 
 const PRIVATE_KEY = process.env.UP_PK;
 const EOA = new ethers.Wallet(PRIVATE_KEY).connect(provider);
-
-async function main() {
-    const newExtensionAddress = await deployAndSetupNewExtension();
-    console.log('🔥 Extensión desplegada y configurada:', newExtensionAddress);
-}
-
-main()
 
 async function deployAndSetupNewExtension() {
     console.log('🚀 Desplegando nueva extensión simplificada...');
@@ -162,7 +155,7 @@ async function deployAndSetupNewExtension() {
 }
 
 const setContractMetadata = async () => {
-    const targetContractAddress = '0x4FB99a7ab547582646B9069eAB46F91dBAf31091';
+    const targetContractAddress = '0x758dd04F4Ee546010d320c7a8C8B9e8Fb2111281';
     const targetContract = new ethers.Contract(
         targetContractAddress,
         UniversalProfile.abi,
@@ -176,11 +169,15 @@ const setContractMetadata = async () => {
         {
             keyName: 'LSP4Metadata',
             value: {
-                json: { "LSP4Metadata": { "name": "Metaheads Hat", "description": "Third  wearable drop from THE HUB DAO featuring Metaheads. This LSP7 token can only be used once and it can only be equipped to your Citizens. If you equip it to any of your Citizens, this token will be burnt. Choose wisely!", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://QmaT1JMTAcid7d6PsY3eNXQnLpahw21Qv2Vir48HbzkTAc" }]], "attributes": [{ "value": "Tier", "type": "string", "key": "Mythical" }] } },
-                url: 'ipfs://QmesSjNQ7FwZptgafWsJN8biSpiXDhPGnVYURmhjFPXZsT',
+                json: {
+                    "LSP4Metadata": { "name": "Pink Balaclava", "description": "THE HUB x UNDERWEAR wearable drop: honoring Lyxbandit and showcasing the Pink Chain Balaclava.", "images": [[{ "width": 1080, "height": 1080, "url": "ipfs://bafybeibbc4jqzbb2jrjs4rzdge7uxc6ey4nt25o4ms3i6eufytjz2p5qzy" }]], "assets": [{ "url": "ipfs://bafybeifnaxe4cfpqqfevlmrvcxzyniu6dhxeedcqwhp3zt3mo76pk55xqm", "fileType": "mp4" }] },
+                    
+                },
+                url: 'ipfs://bafkreidffhluke65iwytzvzknqfdemuc7el4pgqt3uqjl5zikmhdgxbnpa',
             },
-        },
+        }
     ])
+    console.log("Metadata Data Value", metadataDataValue)
     const setMetadataDataEncodedFunction = targetContract.interface.encodeFunctionData('setData', [metadataDataKey, metadataDataValue.values[0]])
     const tx = await universalProfile.connect(EOA).execute(OPERATION_CALL, // operation type = CREATE
         targetContractAddress, // address zero
@@ -511,3 +508,12 @@ async function grantExtensionCallPermission(extensionAddress, targetContractAddr
     const tx = await keyManager.connect(EOA).execute(setDataCall);
     await tx.wait();
 }
+
+
+async function main() {
+/*     const newExtensionAddress = await deployAndSetupNewExtension();
+    console.log('🔥 Extensión desplegada y configurada:', newExtensionAddress); */
+    await setContractMetadata()
+}
+
+main()
